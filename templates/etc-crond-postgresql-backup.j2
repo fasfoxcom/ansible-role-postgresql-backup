@@ -21,12 +21,13 @@ EXPIRED_DAYS=`expr $((({{ postgresql_backup_weeks_to_keep }} * 7) + 1))`
 
 if [ $DAY_OF_WEEK = {{ postgresql_backup_day_of_week_to_keep }} ];
 then
-    # Delete all expired weekly directories
-    find $BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-weekly.pgdump" -exec rm -rf '{}' ';'
-
     FINAL_BACKUP_DIR="${BACKUP_DIR}weekly/"
+
+    # Delete all expired weekly directories
+    find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-weekly.pgdump" -exec rm -rf '{}' ';'
+
     mkdir -p "${FINAL_BACKUP_DIR}"
-    cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_daily | quote }})"
+    cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_weekly | quote }})"
     exit 0;
 
 fi
@@ -36,7 +37,7 @@ fi
 FINAL_BACKUP_DIR="${BACKUP_DIR}daily/"
 
 # Delete daily backups 7 days old or more
-find $BACKUP_DIR -maxdepth 1 -mtime +{{ postgresql_backup_days_to_keep }} -name "*-daily.pgdump" -exec rm -rf '{}' ';'
+find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +{{ postgresql_backup_days_to_keep }} -name "*-daily.pgdump" -exec rm -rf '{}' ';'
 
 mkdir -p "${FINAL_BACKUP_DIR}"
 cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_daily | quote }})"
@@ -49,6 +50,6 @@ FINAL_BACKUP_DIR="${BACKUP_DIR}hourly/"
 find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +3 -name "*-hourly.pgdump" -exec rm -rf '{}' ';'
 
 mkdir -p "${FINAL_BACKUP_DIR}"
-cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_hourly | quote }}"
+cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_hourly | quote }})"
 
 rm "$OUTPUT"

@@ -4,10 +4,12 @@
 # postgresql_backup_dir:
 postgresql_backup_filename_format: >-
   {{ ansible_hostname }}-%Y%m%d-%H%M%S.pgdump
+postgresql_backup_filename_format_weekly: >-
+  {{ ansible_hostname }}-%Y%m%d-weekly.pgdump
 postgresql_backup_filename_format_daily: >-
-  {{ ansible_hostname }}-%Y%m%d.pgdump
+  {{ ansible_hostname }}-%Y%m%d-daily.pgdump
 postgresql_backup_filename_format_hourly: >-
-  {{ ansible_hostname }}-%Y%m%d-%H.pgdump
+  {{ ansible_hostname }}-%Y%m%d-%H-hourly.pgdump
 postgresql_backup_frequency: daily
 postgresql_backup_minimum_expected_size: 1
 
