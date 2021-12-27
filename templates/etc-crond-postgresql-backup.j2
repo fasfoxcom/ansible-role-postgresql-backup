@@ -13,6 +13,8 @@ if [ $size -lt {{ postgresql_backup_minimum_expected_size }} ]; then
 fi
 
 mv "$OUTPUT.tmp" "$OUTPUT"
+gzip -f "$OUTPUT"
+OUTPUT="$OUTPUT.gz"
 
 # WEEKLY BACKUPS
 
@@ -27,8 +29,7 @@ then
     find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-weekly.pgdump" -exec rm -rf '{}' ';'
 
     mkdir -p "${FINAL_BACKUP_DIR}"
-    cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_weekly | quote }})"
-    exit 0;
+    cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_weekly | quote }}).gz"
 
 fi
 
@@ -40,7 +41,7 @@ FINAL_BACKUP_DIR="${BACKUP_DIR}daily/"
 find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +{{ postgresql_backup_days_to_keep }} -name "*-daily.pgdump" -exec rm -rf '{}' ';'
 
 mkdir -p "${FINAL_BACKUP_DIR}"
-cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_daily | quote }})"
+cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_daily | quote }}).gz"
 
 # HOURLY BACKUPS
 
@@ -50,6 +51,6 @@ FINAL_BACKUP_DIR="${BACKUP_DIR}hourly/"
 find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +3 -name "*-hourly.pgdump" -exec rm -rf '{}' ';'
 
 mkdir -p "${FINAL_BACKUP_DIR}"
-cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_hourly | quote }})"
+cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_hourly | quote }}).gz"
 
 rm "$OUTPUT"
