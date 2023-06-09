@@ -21,6 +21,7 @@ Role Variables
 
 Required:
 - `postgresql_backup_dir`: Save backups in this directory
+- `postgresql_last_backup_dir`: Save the last backup in this directory (useful for Restic: only save one file since Restic has its own retention policy)
 
 Optional:
 - `postgresql_backup_filename_format`: A filename containing unix `date` format sequences, default `{{ ansible_hostname }}-%Y%m%d-%H%M%S.pgdump`.

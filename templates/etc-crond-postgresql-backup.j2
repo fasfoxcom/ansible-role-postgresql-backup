@@ -3,7 +3,9 @@
 # Do not edit manually (see ansible role)
 
 BACKUP_DIR="{{ postgresql_backup_dir | quote}}/"
-OUTPUT="${BACKUP_DIR}$(date +{{ postgresql_backup_filename_format | quote }})"
+LAST_BACKUP_DIR="{{ postgresql_last_backup_dir | quote}}/"
+BACKUP_NAME="$(date +{{ postgresql_backup_filename_format | quote }})"
+OUTPUT="${BACKUP_DIR}${BACKUP_NAME}"
 su postgres -c "/usr/bin/pg_dumpall -f \"$OUTPUT.tmp\""
 
 size=$(stat -c%s "$OUTPUT.tmp")
@@ -13,6 +15,15 @@ if [ $size -lt {{ postgresql_backup_minimum_expected_size }} ]; then
 fi
 
 mv "$OUTPUT.tmp" "$OUTPUT"
+
+# Last backup dir: meant for distant backup
+
+# Keep the same filename so that Restic can optimize the backup 
+cp "$OUTPUT" "${LAST_BACKUP_DIR}last.pgdump"
+rm "${LAST_BACKUP_DIR}"*.timestamp
+# But store the timestamp for easier investigation
+echo "${BACKUP_NAME}" > "${LAST_BACKUP_DIR}${BACKUP_NAME}.timestamp"
+
 gzip -f "$OUTPUT"
 OUTPUT="$OUTPUT.gz"
 
@@ -26,7 +37,7 @@ then
     FINAL_BACKUP_DIR="${BACKUP_DIR}weekly/"
 
     # Delete all expired weekly directories
-    find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-weekly.pgdump" -exec rm -rf '{}' ';'
+    find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +$EXPIRED_DAYS -name "*-weekly.pgdump.gz" -exec rm -rf '{}' ';'
 
     mkdir -p "${FINAL_BACKUP_DIR}"
     cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_weekly | quote }}).gz"
@@ -38,7 +49,7 @@ fi
 FINAL_BACKUP_DIR="${BACKUP_DIR}daily/"
 
 # Delete daily backups 7 days old or more
-find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +{{ postgresql_backup_days_to_keep }} -name "*-daily.pgdump" -exec rm -rf '{}' ';'
+find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +{{ postgresql_backup_days_to_keep }} -name "*-daily.pgdump.gz" -exec rm -rf '{}' ';'
 
 mkdir -p "${FINAL_BACKUP_DIR}"
 cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_daily | quote }}).gz"
@@ -47,8 +58,8 @@ cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_da
 
 FINAL_BACKUP_DIR="${BACKUP_DIR}hourly/"
 
-# Delete hourly backups 3 days old or more
-find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +3 -name "*-hourly.pgdump" -exec rm -rf '{}' ';'
+# Delete hourly backups 2 days old or more
+find $FINAL_BACKUP_DIR -maxdepth 1 -mtime +2 -name "*-hourly.pgdump.gz" -exec rm -rf '{}' ';'
 
 mkdir -p "${FINAL_BACKUP_DIR}"
 cp "$OUTPUT" "${FINAL_BACKUP_DIR}$(date +{{ postgresql_backup_filename_format_hourly | quote }}).gz"

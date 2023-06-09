@@ -17,5 +17,6 @@
 
     - role: ansible-role-postgresql-backup
       postgresql_backup_dir: /backup/postgresql
+      postgresql_last_backup_dir: /backup/postgresql-last
       postgresql_backup_filename_format: >-
         {{ ansible_hostname }}-%Y%m%d.pgdump
